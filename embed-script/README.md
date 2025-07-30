@@ -394,6 +394,26 @@ When `receive-calls` is enabled:
   ></call-widget>
   ```
 
+### Reusing a Subscriber ID
+
+Each call to `/api/create-subscriber-token` returns a `subscriber_id`. Store this
+value client side and supply it in later token requests to maintain the same
+subscriber across sessions:
+
+```javascript
+const saved = localStorage.getItem('subscriber_id');
+const resp = await fetch('/api/create-subscriber-token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    displayName: 'Universal Caller',
+    subscriberId: saved,
+  }),
+});
+const data = await resp.json();
+localStorage.setItem('subscriber_id', data.subscriber_id);
+```
+
 ## Running in Cursor
 
 To quickly test the sample server using the [Cursor](https://cursor.sh) IDE:

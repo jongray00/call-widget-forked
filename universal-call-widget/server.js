@@ -19,11 +19,12 @@ const SIGNALWIRE_CONFIG = {
 
 app.post('/api/create-subscriber-token', async (req, res) => {
   try {
-    const { displayName } = req.body;
-    const subscriberId = `video-caller-${Math.random().toString(36).substr(2, 9)}`;
+    const { displayName, subscriberId } = req.body;
+    const finalSubscriberId =
+      subscriberId || `video-caller-${Math.random().toString(36).substr(2, 9)}`;
 
     const requestBody = {
-      subscriber_id: subscriberId,
+      subscriber_id: finalSubscriberId,
       reference: `video-caller-${Date.now()}`,
       ttl: 3600,
     };
@@ -43,7 +44,7 @@ app.post('/api/create-subscriber-token', async (req, res) => {
     res.json({
       success: true,
       token: response.data.token,
-      subscriber_id: response.data.subscriber_id,
+      subscriber_id: finalSubscriberId,
       display_name: displayName,
     });
   } catch (error) {
