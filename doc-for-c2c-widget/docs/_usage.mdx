@@ -401,7 +401,7 @@ value client side and supply it in later token requests to maintain the same
 subscriber across sessions:
 
 ```javascript
-const saved = localStorage.getItem('subscriber_id');
+const saved = localStorage.getItem('subscriber_id') || 'video-caller-1753911556258';
 const resp = await fetch('/api/create-subscriber-token', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
