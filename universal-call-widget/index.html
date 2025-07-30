@@ -34,10 +34,11 @@
     .control-btn.unmute { background:#28a745; }
     .control-btn.end { background:#dc3545; }
     .transcript { max-height:400px; overflow-y:auto; border:1px solid #ddd; border-radius:8px; padding:20px; background:#f8f9fa; }
-    .transcript-entry { margin-bottom:10px; padding:10px; border-radius:4px; background:white; }
-    .transcript-entry.ai { border-left:4px solid #007acc; }
-    .transcript-entry.user { border-left:4px solid #28a745; }
-    .transcript-entry.system { border-left:4px solid #6c757d; font-style:italic; }
+    .transcript-entry { margin-bottom:10px; padding:10px; border-radius:4px; background:#fff; color:#111; }
+    .transcript-entry.ai { border-left:4px solid #007acc; background:#e7f1ff; }
+    .transcript-entry.user { border-left:4px solid #28a745; background:#e8f5e9; }
+    .transcript-entry.system { border-left:4px solid #6c757d; background:#f0f0f0; font-style:italic; }
+    .transcript-entry.partial { opacity:0.7; }
     .timestamp { font-size:12px; color:#666; margin-bottom:5px; }
     .quick-dial { display:flex; gap:10px; margin-bottom:20px; }
     .quick-dial button { background:#28a745; }
@@ -164,8 +165,8 @@
         const cleanText = params.text.replace(/\{confidence=[\d.]+\}/, "");
         addTranscript('user', `You: ${cleanText}`, 'complete');
       });
-      signalWireClient.on('ai.completion', (params) => addTranscript('ai', `AI: ${params.text}`, 'complete'));
-      signalWireClient.on('ai.response_utterance', (params) => addTranscript('ai', `AI (speaking): ${params.utterance}`, 'complete'));
+      signalWireClient.on('ai.completion', (params) => finalizeAiSpeaking(params.text));
+      signalWireClient.on('ai.response_utterance', (params) => updateAiSpeaking(params.utterance));
     }
 
     async function makeCall() {
@@ -246,14 +247,38 @@
       addTranscript('system', 'Call ended', 'complete');
     }
 
-    function addTranscript(type, text, status) {
+    let aiSpeakingEntry = null;
+
+    function addTranscript(type, text, status, returnEntry = false) {
       const content = document.getElementById('transcriptContent');
       const entry = document.createElement('div');
       entry.className = `transcript-entry ${type}`;
+      if (status === 'partial') entry.classList.add('partial');
       const timestamp = new Date().toLocaleTimeString();
-      entry.innerHTML = `<div class="timestamp">${timestamp}</div><div>${text}</div>`;
+      entry.innerHTML = `<div class="timestamp">${timestamp}</div><div class="text">${text}</div>`;
       content.appendChild(entry);
       content.scrollTop = content.scrollHeight;
+      return returnEntry ? entry : null;
+    }
+
+    function updateAiSpeaking(text) {
+      if (!aiSpeakingEntry) {
+        aiSpeakingEntry = addTranscript('ai', `AI (speaking): ${text}`, 'partial', true);
+      } else {
+        const textDiv = aiSpeakingEntry.querySelector('.text');
+        textDiv.textContent += ` ${text}`;
+      }
+    }
+
+    function finalizeAiSpeaking(finalText) {
+      if (aiSpeakingEntry) {
+        const textDiv = aiSpeakingEntry.querySelector('.text');
+        textDiv.textContent = `AI: ${finalText}`;
+        aiSpeakingEntry.classList.remove('partial');
+        aiSpeakingEntry = null;
+      } else {
+        addTranscript('ai', `AI: ${finalText}`, 'complete');
+      }
     }
 
     function showStatus(message, type) {
