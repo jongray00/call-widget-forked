@@ -414,6 +414,40 @@ const data = await resp.json();
 localStorage.setItem('subscriber_id', data.subscriber_id);
 ```
 
+### Handling Live Transcript Events
+
+The widget emits several AI transcript events internally. If you need custom transcript handling, you can listen for them as shown below:
+
+```javascript
+client.on("ai.partial_result", (params) => {
+  // User is speaking - partial transcription
+  logEvent('ai.partial_result', params.text, 'user');
+});
+
+client.on("ai.speech_detect", (params) => {
+  // User finished speaking - final transcription
+  const cleanText = params.text.replace(/\{confidence=[\d.]+\}/, "");
+  addToTranscript('user', cleanText);
+  logEvent('ai.speech_detect', cleanText, 'user');
+});
+
+client.on("ai.response_utterance", (params) => {
+  // AI is speaking
+  logEvent('ai.response_utterance', params.utterance, 'ai');
+});
+
+client.on("ai.completion", (params) => {
+  // AI finished speaking
+  addToTranscript('ai', params.text);
+  logEvent('ai.completion', params.text, 'ai');
+});
+
+client.on("ai.transparent_barge", (params) => {
+  // User interrupted AI
+  logEvent('ai.transparent_barge', 'User interrupted', 'system');
+});
+```
+
 ## Running in Cursor
 
 To quickly test the sample server using the [Cursor](https://cursor.sh) IDE:
