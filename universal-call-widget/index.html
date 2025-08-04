@@ -326,6 +326,7 @@
     }
 
     function updateAiSpeaking(text) {
+      if (!text) return;
       if (!aiSpeakingEntry) {
         aiSpeakingEntry = addTranscript('ai', `AI (speaking): ${text}`, 'partial', true);
       } else {
