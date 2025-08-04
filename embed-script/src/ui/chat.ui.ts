@@ -8,12 +8,7 @@ export default function createChatUI(
   chatHistory: ChatEntry[],
   currentRoot: HTMLElement
 ) {
-  const SCROLL_THRESHOLD = 300;
-
-  const chatPanelScrolledToBottom =
-    currentRoot.scrollHeight - currentRoot.clientHeight <=
-    currentRoot.scrollTop + SCROLL_THRESHOLD;
-  const previousScrollTop = currentRoot.scrollTop;
+  // Always keep the latest message in view
 
   const converter = new showdown.Converter();
   converter.setOption("openLinksInNewWindow", true);
@@ -44,12 +39,8 @@ export default function createChatUI(
     currentRoot.appendChild(chatContainer);
   }
 
-  if (chatPanelScrolledToBottom) {
-    currentRoot.scrollTo({
-      top: currentRoot.scrollHeight,
-      behavior: "smooth",
-    });
-  } else {
-    currentRoot.scrollTop = previousScrollTop;
-  }
+  currentRoot.scrollTo({
+    top: currentRoot.scrollHeight,
+    behavior: "smooth",
+  });
 }
