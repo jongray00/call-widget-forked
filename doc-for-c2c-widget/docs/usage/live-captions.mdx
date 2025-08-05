@@ -1,0 +1,61 @@
+---
+title: Handling Live Captions Events
+sidebar_position: 3
+---
+
+This guide demonstrates how you might listen to caption events from the Call Widget.
+The actual events used for generating the built‑in transcript are internal to the
+widget, but a custom implementation could expose them as shown below.
+
+```javascript
+// Since the actual AI events are internal to the widget,
+// here's how you would handle them if they were exposed:
+
+// These are the actual event handlers from the source code:
+client.on("ai.partial_result", (params) => {
+    // User is speaking - partial transcription
+    logEvent('ai.partial_result', params.text, 'user');
+});
+
+client.on("ai.speech_detect", (params) => {
+    // User finished speaking - final transcription
+    const cleanText = params.text.replace(/\{confidence=[\d.]+\}/, "");
+    addToTranscript('user', cleanText);
+    logEvent('ai.speech_detect', cleanText, 'user');
+});
+
+client.on("ai.response_utterance", (params) => {
+    // AI is speaking
+    logEvent('ai.response_utterance', params.utterance, 'ai');
+});
+
+client.on("ai.completion", (params) => {
+    // AI finished speaking
+    addToTranscript('ai', params.text);
+    logEvent('ai.completion', params.text, 'ai');
+});
+
+client.on("ai.transparent_barge", (params) => {
+    // User interrupted AI
+    logEvent('ai.transparent_barge', 'User interrupted', 'system');
+});
+```
+
+Each event provides text you can display in a transcript component. A minimal
+`addToTranscript` and `logEvent` might look like:
+
+```javascript
+function addToTranscript(speaker, text) {
+  const entry = document.createElement('div');
+  entry.className = speaker;
+  entry.textContent = text;
+  transcriptElement.appendChild(entry);
+}
+
+function logEvent(event, text, speaker) {
+  console.log(`[${event}] ${speaker}: ${text}`);
+}
+```
+
+With these handlers wired up, your application can display live captions next to
+or below the call view so users can follow along in real time.
